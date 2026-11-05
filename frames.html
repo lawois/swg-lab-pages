@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SWG lab frames</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{font:15px system-ui;margin:1.5rem}
+ .g{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;max-width:48rem}
+ iframe{width:100%;height:5rem;border:1px solid #ccc}
+</style></head>
+<body>
+<h1>SWG lab frames</h1>
+<p>Six frames reload themselves every 10 seconds, and two background loops call this site (a fetch every
+2 seconds and an image every 3 seconds). When the identity expires, this is the burst of requests the
+captive portal has to absorb.</p>
+<div class="g" id="g"></div>
+<p>Background calls: <b id="n">0</b> | non-200: <b id="bad">0</b> | last: <b id="last">-</b></p>
+<script>
+ const S = window.__swg = { n: 0, bad: 0, last: null };
+ const g = document.getElementById('g');
+ for (let i = 1; i <= 6; i++) { const f = document.createElement('iframe'); f.src = 'frame.html?i=' + i; g.appendChild(f); }
+ const upd = s => { S.n++; if (s !== 200) S.bad++; S.last = s;
+   document.getElementById('n').textContent = S.n; document.getElementById('bad').textContent = S.bad; document.getElementById('last').textContent = S.last; };
+ setInterval(async () => { try { const r = await fetch('ping.json?t=' + Date.now(), { cache: 'no-store' }); upd(r.status); } catch (e) { upd('err'); } }, 2000);
+ setInterval(() => { const im = new Image(); im.onload = () => upd(200); im.onerror = () => upd('img-err'); im.src = 'pixel.gif?t=' + Date.now(); }, 3000);
+</script></body></html>

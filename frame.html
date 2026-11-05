@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>frame</title>
+<style>body{font:13px system-ui;margin:.5rem}</style></head>
+<body>
+<span id="who"></span> loaded <span id="t"></span>
+<script>
+ const i = new URLSearchParams(location.search).get('i') || '?';
+ document.getElementById('who').textContent = 'frame ' + i;
+ document.getElementById('t').textContent = new Date().toLocaleTimeString();
+ // each frame reloads itself every 10 s, which is a navigation request of type iframe
+ setTimeout(() => location.reload(), 10000);
+</script></body></html>

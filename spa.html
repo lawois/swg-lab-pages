@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SWG lab SPA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{font:15px system-ui;margin:1.5rem;max-width:44rem}
+ #banner{padding:.7rem 1rem;border-radius:6px;margin:1rem 0;background:#e6f4ea;color:#14532d}
+ #banner.err{background:#fde8e8;color:#7f1d1d}
+ pre{background:#f4f4f5;padding:.6rem;max-height:18rem;overflow:auto;font-size:13px}
+</style></head>
+<body>
+<h1>SWG lab SPA</h1>
+<p>This page never navigates. Every 5 seconds it calls <code>ping.json</code> on this site, as a single-page
+application would. When the proxy answers anything but 200, the banner turns red, like the
+authorization error of a real application.</p>
+<div id="banner">starting...</div>
+<p>Calls: <b id="n">0</b> | OK: <b id="ok">0</b> | failed: <b id="bad">0</b> | last status: <b id="last">-</b></p>
+<pre id="log"></pre>
+<script>
+ // Exposed for Playwright: window.__swg.log is an array of {t, status, ms, error}
+ const S = window.__swg = { log: [], n: 0, ok: 0, bad: 0, last: null };
+ const $ = id => document.getElementById(id);
+ async function tick() {
+   const t0 = performance.now(); let status = null, error = null;
+   try {
+     const r = await fetch('ping.json?t=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' });
+     status = r.status; await r.text();
+   } catch (e) { error = String(e); }
+   const ms = Math.round(performance.now() - t0);
+   const good = status === 200;
+   S.n++; good ? S.ok++ : S.bad++; S.last = status ?? error;
+   S.log.push({ t: new Date().toISOString(), status, ms, error });
+   $('n').textContent = S.n; $('ok').textContent = S.ok; $('bad').textContent = S.bad; $('last').textContent = S.last;
+   const b = $('banner');
+   b.className = good ? '' : 'err';
+   b.textContent = good ? 'OK: the application can reach its backend'
+                        : 'We could not authorize your access (status ' + (status ?? error) + '). Reload this page.';
+   const l = $('log'); l.textContent = S.log.slice(-40).map(x => x.t.slice(11,19) + '  ' + (x.status ?? x.error) + '  ' + x.ms + ' ms').reverse().join('\n');
+ }
+ tick(); setInterval(tick, 5000);
+</script></body></html>
